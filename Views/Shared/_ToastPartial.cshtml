@@ -1,0 +1,19 @@
+﻿@using Donatello.Extensions
+@using Donatello.Models
+
+@{
+    var toast = TempData.Get<ToastModel>("ToastMessage");
+}
+
+@if (toast != null)
+{
+    var toastCss = toast.Type == ToastType.success ? "bg-success text-white" :
+                   toast.Type == ToastType.info ? "bg-info text-dark" :
+                   toast.Type == ToastType.warning ? "bg-warning text-dark" :
+                   "bg-danger text-white";
+
+    <div class="alert @toastCss alert-dismissible fade show mt-2" role="alert">
+        @toast.Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}

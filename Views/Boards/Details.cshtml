@@ -1,0 +1,89 @@
+﻿@model Donatello.Data.Entities.Board
+@using Donatello.Data.Entities
+
+<h1 class="mb-1">@Model.Title</h1>
+<p class="text-muted mb-3">@Model.Description</p>
+
+<div class="mb-3 d-flex gap-2">
+    <a asp-action="Index" class="btn btn-secondary">Back to Boards</a>
+    <a class="btn btn-success" asp-controller="Columns" asp-action="Create" asp-route-boardId="@Model.Id">
+        + Add Column
+    </a>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<form id="antiForgeryForm" style="display:none">
+    @Html.AntiForgeryToken()
+</form>
+
+<div id="columnsContainer" class="board d-flex gap-3 flex-nowrap" style="overflow-x:auto;">
+    @{
+        var columns = Model.Columns?.OrderBy(c => c.Order).ToList() ?? new List<Column>();
+        if (!columns.Any())
+        {
+            <div class="text-muted">No columns yet. Add the first column.</div>
+        }
+    }
+
+    @foreach (var column in columns)
+    {
+        <div class="list column-card border rounded p-2 bg-light" data-column-id="@column.Id" draggable="true" style="width: 300px; min-height: 120px;">
+            <div class="d-flex justify-content-between align-items-start">
+                <h5 class="mb-1 column-title">@column.Title</h5>
+                @if (!string.IsNullOrEmpty(column.Color))
+                {
+                    <span class="badge" style="background:@column.Color;">&nbsp;</span>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(column.Description))
+            {
+                <div class="small text-muted mb-2">@column.Description</div>
+            }
+
+            @if (!string.IsNullOrEmpty(column.AttachmentPath))
+            {
+                var lower = column.AttachmentPath.ToLowerInvariant();
+                var isImage = lower.EndsWith(".jpg") || lower.EndsWith(".jpeg") || lower.EndsWith(".png") || lower.EndsWith(".gif") || lower.EndsWith(".webp");
+                if (isImage)
+                {
+                    <img src="@column.AttachmentPath" alt="Column attachment" style="max-width:100%; height:auto; border-radius:4px;" />
+                }
+                else
+                {
+                    <a href="@column.AttachmentPath" target="_blank" class="small">Attachment</a>
+                }
+            }
+
+            <div class="cards d-flex flex-column gap-2 mt-2">
+                @foreach (var card in column.Cards.OrderBy(c => c.Order))
+                {
+                    <div class="task border p-2 rounded bg-white shadow-sm">
+                        <div class="fw-bold">@card.Title</div>
+                        @if (!string.IsNullOrWhiteSpace(card.Description))
+                        {
+                            <div class="text-muted small">@card.Description</div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="mt-2 d-grid">
+                <a asp-controller="Cards" asp-action="Create" asp-route-columnId="@column.Id" asp-route-boardId="@Model.Id" class="btn btn-sm btn-primary">
+                    + Add Card
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        window.__currentBoardId = @Model.Id;
+    </script>
+    <script src="~/js/columns-dnd.js"></script>
+}

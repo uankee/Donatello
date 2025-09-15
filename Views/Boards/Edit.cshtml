@@ -1,0 +1,25 @@
+﻿@model Donatello.Data.Entities.Board
+
+<h1>Edit Board</h1>
+
+<form asp-action="Edit" method="post" class="row g-3">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="col-md-8">
+        <label asp-for="Title" class="form-label">Title</label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger small"></span>
+    </div>
+
+    <div class="col-md-12">
+        <label asp-for="Description" class="form-label">Description</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <div class="col-6">
+        <a asp-action="Index" class="btn btn-dark w-100">Back</a>
+    </div>
+    <div class="col-6">
+        <button class="btn btn-success w-100" type="submit">Save</button>
+    </div>
+</form>

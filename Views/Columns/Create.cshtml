@@ -1,0 +1,48 @@
+﻿@model Donatello.Data.Entities.Column
+
+<h2>Add Column to Board: @ViewBag.BoardTitle</h2>
+
+@if (ViewBag.Errors != null)
+{
+    <div class="alert alert-danger">
+        <ul>
+            @foreach (var err in (List<string>)ViewBag.Errors)
+            {
+                <li>@err</li>
+            }
+        </ul>
+    </div>
+}
+
+<form asp-action="Create" enctype="multipart/form-data" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="BoardId" />
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Color" class="form-label"></label>
+        <input asp-for="Color" class="form-control" placeholder="#ff0000 or red" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Attachment (optional)</label>
+        <input type="file" name="attachment" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Add Column</button>
+    <a asp-controller="Boards" asp-action="Details" asp-route-id="@Model.BoardId" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

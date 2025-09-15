@@ -1,0 +1,14 @@
+﻿@model Donatello.Data.Entities.Board
+
+<h1>Create Board</h1>
+<form asp-action="Create" method="post">
+    <label asp-for="Title"></label>
+    <input asp-for="Title" />
+    <span asp-validation-for="Title"></span>
+
+    <label asp-for="Description"></label>
+    <textarea asp-for="Description"></textarea>
+
+    <button type="submit">Create</button>
+    <a asp-action="Index">Back</a>
+</form>
