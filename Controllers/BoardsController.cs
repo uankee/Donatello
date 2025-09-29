@@ -1,5 +1,7 @@
 ﻿using Donatello.Data;
 using Donatello.Data.Entities;
+using Donatello.Extensions;
+using Donatello.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,11 +27,13 @@ public class BoardsController : Controller
     public async Task<IActionResult> Index()
     {
         var user = await _userManager.GetUserAsync(User);
+
         var boards = await _db.Boards
-            .Where(b => b.Users.Any(u => u.Id == user.Id))
+            .Where(b => b.BoardUsers.Any(bu => bu.UserId == user.Id))
             .OrderBy(b => b.Order)
             .AsNoTracking()
             .ToListAsync();
+
         return View(boards);
     }
 
@@ -46,10 +50,26 @@ public class BoardsController : Controller
         board.Order = lastOrder + 1;
 
         var user = await _userManager.GetUserAsync(User);
-        board.Users.Add(user);
 
         _db.Boards.Add(board);
         await _db.SaveChangesAsync();
+
+        // робимо творця дошки Admin
+        var boardUser = new BoardUser
+        {
+            BoardId = board.Id,
+            UserId = user.Id,
+            Role = "Admin"
+        };
+        _db.BoardUsers.Add(boardUser);
+        await _db.SaveChangesAsync();
+
+        TempData.Set("ToastMessage", new ToastModel
+        {
+            Message = $"Дошку \"{board.Title}\" успішно створено!",
+            Type = ToastType.success
+        });
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -58,8 +78,8 @@ public class BoardsController : Controller
     {
         var user = await _userManager.GetUserAsync(User);
         var board = await _db.Boards
-            .Include(b => b.Users)
-            .FirstOrDefaultAsync(b => b.Id == id && b.Users.Any(u => u.Id == user.Id));
+            .Include(b => b.BoardUsers)
+            .FirstOrDefaultAsync(b => b.Id == id && b.BoardUsers.Any(bu => bu.UserId == user.Id));
 
         if (board == null) return Forbid();
         return View(board);
@@ -71,14 +91,21 @@ public class BoardsController : Controller
     {
         var user = await _userManager.GetUserAsync(User);
         var exists = await _db.Boards
-            .Include(b => b.Users)
-            .AnyAsync(b => b.Id == board.Id && b.Users.Any(u => u.Id == user.Id));
+            .Include(b => b.BoardUsers)
+            .AnyAsync(b => b.Id == board.Id && b.BoardUsers.Any(bu => bu.UserId == user.Id));
 
         if (!exists) return Forbid();
         if (!ModelState.IsValid) return View(board);
 
         _db.Boards.Update(board);
         await _db.SaveChangesAsync();
+
+        TempData.Set("ToastMessage", new ToastModel
+        {
+            Message = $"Дошку \"{board.Title}\" оновлено!",
+            Type = ToastType.info
+        });
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -89,30 +116,43 @@ public class BoardsController : Controller
         try
         {
             var user = await _userManager.GetUserAsync(User);
+            var boardUser = await _db.BoardUsers
+                .FirstOrDefaultAsync(bu => bu.BoardId == id && bu.UserId == user.Id);
+
+            if (boardUser == null || boardUser.Role != "Admin") return Forbid();
+
             var board = await _db.Boards
-                .Include(b => b.Users)
-                .FirstOrDefaultAsync(b => b.Id == id && b.Users.Any(u => u.Id == user.Id));
+                .Include(b => b.Columns)
+                .ThenInclude(c => c.Cards)
+                .FirstOrDefaultAsync(b => b.Id == id);
 
-            if (board == null) return Forbid();
+            if (board == null) return NotFound();
 
-            var columns = await _db.Columns.Where(c => c.BoardId == id).ToListAsync();
-            if (columns.Any())
-            {
-                var columnIds = columns.Select(c => c.Id).ToList();
-                var cards = await _db.Cards.Where(c => columnIds.Contains(c.ColumnId)).ToListAsync();
-                if (cards.Any()) _db.Cards.RemoveRange(cards);
-                _db.Columns.RemoveRange(columns);
-            }
-
+            _db.Cards.RemoveRange(board.Columns.SelectMany(c => c.Cards));
+            _db.Columns.RemoveRange(board.Columns);
+            _db.BoardUsers.RemoveRange(_db.BoardUsers.Where(bu => bu.BoardId == id));
             _db.Boards.Remove(board);
+
             await _db.SaveChangesAsync();
+
+            TempData.Set("ToastMessage", new ToastModel
+            {
+                Message = $"Дошку \"{board.Title}\" видалено!",
+                Type = ToastType.warning
+            });
 
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting board id={BoardId}", id);
-            TempData["ErrorMessage"] = "Під час видалення дошки сталася помилка. Деталі в логах.";
+
+            TempData.Set("ToastMessage", new ToastModel
+            {
+                Message = "Під час видалення дошки сталася помилка.",
+                Type = ToastType.danger
+            });
+
             return RedirectToAction(nameof(Index));
         }
     }
@@ -124,9 +164,10 @@ public class BoardsController : Controller
         var board = await _db.Boards
             .Include(b => b.Columns)
                 .ThenInclude(c => c.Cards)
-            .Include(b => b.Users)
+            .Include(b => b.BoardUsers)
+                .ThenInclude(bu => bu.User)
             .AsSplitQuery()
-            .FirstOrDefaultAsync(b => b.Id == id && b.Users.Any(u => u.Id == user.Id));
+            .FirstOrDefaultAsync(b => b.Id == id && b.BoardUsers.Any(bu => bu.UserId == user.Id));
 
         if (board == null) return Forbid();
 
@@ -150,7 +191,7 @@ public class BoardsController : Controller
         {
             var user = await _userManager.GetUserAsync(User);
             var boards = await _db.Boards
-                .Where(b => boardIds.Contains(b.Id) && b.Users.Any(u => u.Id == user.Id))
+                .Where(b => boardIds.Contains(b.Id) && b.BoardUsers.Any(bu => bu.UserId == user.Id))
                 .ToListAsync();
 
             for (int i = 0; i < boardIds.Count; i++)

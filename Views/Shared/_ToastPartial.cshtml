@@ -2,7 +2,7 @@
 @using Donatello.Models
 
 @{
-    var toast = TempData.Get<ToastModel>("ToastMessage");
+    var toast = TempData.Get<ToastModel>("Toast");
 }
 
 @if (toast != null)
@@ -12,8 +12,18 @@
                    toast.Type == ToastType.warning ? "bg-warning text-dark" :
                    "bg-danger text-white";
 
-    <div class="alert @toastCss alert-dismissible fade show mt-2" role="alert">
-        @toast.Message
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div class="toast align-items-center @toastCss border-0"
+         role="alert"
+         aria-live="assertive"
+         aria-atomic="true"
+         style="position: fixed; top: 1rem; right: 1rem; z-index: 1080;">
+        <div class="d-flex">
+            <div class="toast-body">
+                @toast.Message
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"
+                    aria-label="Close"></button>
+        </div>
     </div>
 }

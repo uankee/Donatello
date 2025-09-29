@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Donatello.Data.Entities;
+using System.Collections.Generic;
 
 namespace Donatello.Data.Entities
 {
     public class ApplicationUser : IdentityUser
     {
-        public ICollection<Board> Boards { get; set; } = new List<Board>();
+        public string FullName { get; set; } = string.Empty;
+        public string Organization { get; set; } = string.Empty;
+
+        public ICollection<BoardUser> BoardUsers { get; set; } = new List<BoardUser>();
     }
 }

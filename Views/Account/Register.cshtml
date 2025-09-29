@@ -8,7 +8,6 @@
 <form asp-action="Register" method="post" novalidate>
     @Html.AntiForgeryToken()
 
-    <!-- Показати сумарні помилки -->
     <div>
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
     </div>

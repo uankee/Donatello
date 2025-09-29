@@ -37,7 +37,8 @@ namespace Donatello.Controllers
             }
 
             var board = await _context.Boards
-                .Include(b => b.Users)
+                .Include(b => b.BoardUsers)
+                .ThenInclude(bu => bu.User)
                 .FirstOrDefaultAsync(b => b.Id == model.BoardId);
 
             if (board == null)
@@ -53,9 +54,10 @@ namespace Donatello.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            if (!board.Users.Any(u => u.Id == inviter.Id))
+            var inviterRole = board.BoardUsers.FirstOrDefault(bu => bu.UserId == inviter.Id)?.Role;
+            if (inviterRole != "Admin")
             {
-                TempData["ErrorMessage"] = "Ви не маєте права запрошувати користувачів на цю дошку.";
+                TempData["ErrorMessage"] = "Лише адміністратор може запрошувати користувачів.";
                 return RedirectToAction("Details", "Boards", new { id = model.BoardId });
             }
 
@@ -66,13 +68,20 @@ namespace Donatello.Controllers
                 return RedirectToAction("Details", "Boards", new { id = model.BoardId });
             }
 
-            if (board.Users.Any(u => u.Id == userToInvite.Id))
+            if (board.BoardUsers.Any(bu => bu.UserId == userToInvite.Id))
             {
                 TempData["ErrorMessage"] = "Користувач вже має доступ до цієї дошки.";
                 return RedirectToAction("Details", "Boards", new { id = model.BoardId });
             }
 
-            board.Users.Add(userToInvite);
+            var boardUser = new BoardUser
+            {
+                BoardId = board.Id,
+                UserId = userToInvite.Id,
+                Role = "User" 
+            };
+
+            _context.BoardUsers.Add(boardUser);
             await _context.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"Користувач {userToInvite.Email} успішно доданий до дошки.";

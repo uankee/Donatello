@@ -11,6 +11,6 @@ namespace Donatello.Data.Entities
 
         public ICollection<Column> Columns { get; set; } = new List<Column>();
 
-        public ICollection<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
+        public ICollection<BoardUser> BoardUsers { get; set; } = new List<BoardUser>();
     }
 }

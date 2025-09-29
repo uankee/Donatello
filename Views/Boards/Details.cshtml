@@ -10,7 +10,6 @@
         + Add Column
     </a>
 
-    <!-- Invite user button -->
     <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#inviteForm" aria-expanded="false">
         Invite User
     </button>
@@ -25,7 +24,6 @@
     <div class="alert alert-success">@TempData["SuccessMessage"]</div>
 }
 
-<!-- Invite form (collapse) -->
 <div class="collapse mb-3" id="inviteForm">
     <div class="card card-body">
         <form asp-controller="Invite" asp-action="InviteUser" method="post" class="row g-2">
