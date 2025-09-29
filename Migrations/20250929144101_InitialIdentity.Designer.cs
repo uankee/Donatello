@@ -4,6 +4,7 @@ using Donatello.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Donatello.Migrations
 {
     [DbContext(typeof(DonatelloDbContext))]
-    partial class DonatelloDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250929144101_InitialIdentity")]
+    partial class InitialIdentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,19 +25,19 @@ namespace Donatello.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("BoardUser", b =>
+            modelBuilder.Entity("ApplicationUserBoard", b =>
                 {
-                    b.Property<int>("BoardId")
+                    b.Property<int>("BoardsId")
                         .HasColumnType("int");
 
-                    b.Property<string>("UserId")
+                    b.Property<string>("UsersId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("BoardId", "UserId");
+                    b.HasKey("BoardsId", "UsersId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UsersId");
 
-                    b.ToTable("BoardUsers", (string)null);
+                    b.ToTable("ApplicationUserBoard");
                 });
 
             modelBuilder.Entity("Donatello.Data.Entities.ApplicationUser", b =>
@@ -388,21 +391,19 @@ namespace Donatello.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("BoardUser", b =>
+            modelBuilder.Entity("ApplicationUserBoard", b =>
                 {
                     b.HasOne("Donatello.Data.Entities.Board", null)
                         .WithMany()
-                        .HasForeignKey("BoardId")
+                        .HasForeignKey("BoardsId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_BoardUser_Board_BoardId");
+                        .IsRequired();
 
                     b.HasOne("Donatello.Data.Entities.ApplicationUser", null)
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("UsersId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_BoardUser_User_UserId");
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Donatello.Data.Entities.Card", b =>

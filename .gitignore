@@ -42,3 +42,7 @@ ScaffoldingReadMe.txt
 *.vspscc
 *.vssscc
 *.pdb
+
+appsettings.json
+appsettings.Development.json
+

@@ -1,12 +1,16 @@
-﻿namespace Donatello.Data.Entities;
+﻿using Microsoft.EntityFrameworkCore;
 
-public class Board
+namespace Donatello.Data.Entities
 {
-    public int Id { get; set; }
-    public string Title { get; set; } = null!;
-    public string? Description { get; set; }
+    public class Board
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = null!;
+        public string? Description { get; set; }
+        public int Order { get; set; } = 0;
 
-    public int Order { get; set; } = 0;
+        public ICollection<Column> Columns { get; set; } = new List<Column>();
 
-    public ICollection<Column> Columns { get; set; } = new List<Column>();
+        public ICollection<ApplicationUser> Users { get; set; } = new List<ApplicationUser>();
+    }
 }

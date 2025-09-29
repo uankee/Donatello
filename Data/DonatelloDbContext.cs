@@ -1,9 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Donatello.Data.Entities;
 
 namespace Donatello.Data;
 
-public class DonatelloDbContext : DbContext
+public class DonatelloDbContext : IdentityDbContext<ApplicationUser>
 {
     public DonatelloDbContext(DbContextOptions<DonatelloDbContext> options) : base(options) { }
 
@@ -15,7 +16,19 @@ public class DonatelloDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Board>().HasData(new Board { Id = 1, Title = "Personal Board", Description = "Example board (Donatello)" });
+        modelBuilder.Entity<Board>()
+            .HasMany(b => b.Users)
+            .WithMany(u => u.Boards)
+            .UsingEntity<Dictionary<string, object>>(
+                "BoardUser",
+                j => j.HasOne<ApplicationUser>().WithMany().HasForeignKey("UserId").HasConstraintName("FK_BoardUser_User_UserId"),
+                j => j.HasOne<Board>().WithMany().HasForeignKey("BoardId").HasConstraintName("FK_BoardUser_Board_BoardId"),
+                j =>
+                {
+                    j.HasKey("BoardId", "UserId");
+                    j.ToTable("BoardUsers");
+                });
+        modelBuilder.Entity<Board>().HasData(new Board { Id = 1, Title = "Personal Board", Description = "Example board (Donatello)", Order = 0 });
 
         modelBuilder.Entity<Column>().HasData(
             new Column { Id = 1, BoardId = 1, Title = "To do", Order = 0 },
